@@ -1,27 +1,25 @@
-FROM linuxserver/baseimage.python
+FROM lsiobase/alpine.python:3.8
 
-MAINTAINER Sparklyballs <sparklyballs@linuxserver.io>, lonix <lonix@linuxserver.io>
+# set version label
+ARG BUILD_DATE
+ARG VERSION
+LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+LABEL maintainer="sparklyballs"
 
 # set python to use utf-8 rather than ascii
 ENV PYTHONIOENCODING="UTF-8"
 
-# build unrar
-RUN mkdir -p /tmp/unrar && \
-curl -o /tmp/unrarsource.tar.gz -L http://rarlab.com/rar/unrarsrc-5.2.7.tar.gz && \
-tar -xvf /tmp/unrarsource.tar.gz -C /tmp/unrar --strip-components=1 && \
-cd /tmp/unrar && \
-make -f makefile && \
-install -v -m755 unrar /usr/bin && \
-apt-get clean && rm -rf /tmp/* /var/lib/apt/lists/* /var/tmp/*
+RUN \
+ echo "**** install packages ****" && \
+ apk add --no-cache \
+	--repository http://nl.alpinelinux.org/alpine/edge/main \
+	nodejs && \
+ echo "**** install app ****" && \
+ git clone --depth=1 https://github.com/Sick-Rage/Sick-Rage.git /app/sickrage
 
-# Adding Custom files
-ADD init/ /etc/my_init.d/
-ADD services/ /etc/service/
-RUN chmod -v +x /etc/service/*/run /etc/my_init.d/*.sh
+# copy local files
+COPY root/ /
 
-# Volumes and Ports
-VOLUME /config /downloads /tv
+# ports and volumes
 EXPOSE 8081
-
-
-
+VOLUME /config /downloads /tv
